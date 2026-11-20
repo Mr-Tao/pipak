@@ -2,7 +2,7 @@
 // icon-color: deep-green; icon-glyph: stopwatch;
 // Pípák Visual 0.2 — all code is local; no network requests.
 
-const VERSION = "0.2";
+const VERSION = "0.2.0";
 const DEFAULTS = {
   work: 20, rest: 10, rounds: 8, sets: 1,
   setRest: 60, countdown: 3, preparation: 10, volume: 35
@@ -76,6 +76,33 @@ function buildTimeline(c) {
 }
 
 // The storage bridge uses a local, intercepted URL, not an HTTP request.
+// Semantic versions are used for stable GitHub Releases, never branch heads.
+function parseSemver(value) {
+  const match = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.exec(value);
+  return match ? match.slice(1).map(Number) : null;
+}
+
+function compareSemver(candidate, current) {
+  const a = parseSemver(candidate), b = parseSemver(current);
+  if (!a || !b || a.some(n => !Number.isSafeInteger(n)) ||
+      b.some(n => !Number.isSafeInteger(n))) return null;
+  for (let i = 0; i < 3; i++) {
+    if (a[i] !== b[i]) return Math.sign(a[i] - b[i]);
+  }
+  return 0;
+}
+
+function versionOfSource(source) {
+  return source.match(/^const VERSION = ["'](\d+\.\d+\.\d+)["'];?$/m)?.[1] ?? null;
+}
+
+function validReleaseSource(source, tag) {
+  const version = tag.startsWith("v") ? tag.slice(1) : "";
+  return typeof source === "string" && source.length > 5000 &&
+    compareSemver(version, "0.0.0") !== null && versionOfSource(source) === version &&
+    source.includes("Pípák Visual") && source.includes("function buildTimeline(");
+}
+
 const PREFIX = "pipak-save://save?data=";
 const NAME = "Pipak-settings.json";
 const local = FileManager.local();
@@ -106,6 +133,96 @@ if (typeof supplied === "string") {
   try { supplied = JSON.parse(supplied); } catch { supplied = null; }
 }
 const initial = normalize(supplied, saved.last, LIMITS);
+
+// Auto-update is intentionally performed only at startup, before WebView is displayed.
+// The loaded JavaScript keeps running at its original version until the next launch.
+async function autoUpdate() {
+  const scriptName = Script.name();
+  if (scriptName !== "Pípák" && scriptName !== "Pipak") return;
+
+  const statePath = local.joinPath(local.libraryDirectory(), "Pipak-auto-update.json");
+  let nextCheckAt = 0;
+  try {
+    if (local.fileExists(statePath)) {
+      nextCheckAt = Number(JSON.parse(local.readString(statePath)).nextCheckAt) || 0;
+    }
+  } catch (error) { console.log(`Pípák update state: ${String(error)}`); }
+  if (Date.now() < nextCheckAt) return;
+
+  // On transient failures retry in an hour; successful checks are daily.
+  let retryAfterMs = 60 * 60 * 1000;
+  try {
+    const scriptFile = `${scriptName}.js`;
+    const locations = [
+      ...(cloud ? [{ fm: cloud, name: "iCloud" }] : []),
+      { fm: local, name: "local" },
+    ];
+    const found = locations.map(({ fm, name }) => ({
+      fm, name, path: fm.joinPath(fm.documentsDirectory(), scriptFile),
+    })).filter(({ fm, path }) => fm.fileExists(path));
+
+    // Ambiguous storage paths must not be modified automatically.
+    if (found.length !== 1) {
+      console.log(`Pípák: self-update skipped (${found.length} matching script files).`);
+      retryAfterMs = 24 * 60 * 60 * 1000;
+      return;
+    }
+
+    const releaseRequest = new Request(
+      "https://api.github.com/repos/Mr-Tao/pipak/releases/latest",
+    );
+    releaseRequest.headers = { Accept: "application/vnd.github+json" };
+    releaseRequest.timeoutInterval = 4;
+    const release = await releaseRequest.loadJSON();
+    const status = releaseRequest.response?.statusCode;
+    if (status === 404) {
+      // No stable release published yet.
+      retryAfterMs = 24 * 60 * 60 * 1000;
+      return;
+    }
+    if (status !== 200) throw new Error(`GitHub Releases HTTP ${status}`);
+
+    const tag = release?.tag_name;
+    if (typeof tag !== "string" || !/^v\d+\.\d+\.\d+$/.test(tag) ||
+        release.draft || release.prerelease) {
+      throw new Error("Unrecognized GitHub release");
+    }
+    retryAfterMs = 24 * 60 * 60 * 1000;
+    if (compareSemver(tag.slice(1), VERSION) !== 1) return;
+
+    const sourceRequest = new Request(
+      `https://raw.githubusercontent.com/Mr-Tao/pipak/${tag}/Pipak.js`,
+    );
+    sourceRequest.timeoutInterval = 5;
+    const latest = await sourceRequest.loadString();
+    if (sourceRequest.response?.statusCode !== 200 || !validReleaseSource(latest, tag)) {
+      throw new Error("Release source failed validation");
+    }
+
+    const { fm, path, name } = found[0];
+    await fm.downloadFileFromiCloud(path);
+    const previous = fm.readString(path);
+    if (previous === latest) return;
+
+    // Keep one last-known-working copy. Do not change user configuration.
+    fm.writeString(`${path}.bak`, previous);
+    const temporary = `${path}.${Date.now()}.part`;
+    fm.writeString(temporary, latest);
+    fm.move(temporary, path);
+    console.log(`Pípák upgraded to ${tag} (${name}); effective at next launch.`);
+  } catch (error) {
+    console.log(`Pípák auto-update: ${String(error)}`);
+  } finally {
+    try {
+      local.writeString(statePath, JSON.stringify({
+        nextCheckAt: Date.now() + retryAfterMs,
+      }));
+    } catch (error) { console.log(`Pípák update state: ${String(error)}`); }
+  }
+}
+
+await autoUpdate();
+
 
 function saveStore(raw) {
   const clean = normalizeStore(raw, DEFAULTS, LIMITS);
