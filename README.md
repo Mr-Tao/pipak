@@ -2,34 +2,36 @@
 
 Intervalový časovač pro iPhone a iPad napsaný v JavaScriptu pro [Scriptable](https://apps.apple.com/cz/app/scriptable/id1405459188). Bez předplatného, sideloadingu a externích zvukových souborů.
 
-## Co umí
+## Funkce
 
 - Tabata 8 × 20/10 s, minutové série 5 × 60 s a vlastní intervaly
 - Více sérií, pauzy, úvodní příprava a výstražná pípnutí
-- Barevné fáze, velký odpočet, přehled kol a průběhu tréninku
+- Barevné fáze, odpočet, přehled kol a průběhu tréninku
 - Nastavitelná hlasitost signálů, pozastavení a pokračování
-- Pojmenované předvolby a ukládání nastavení (iCloud, případně lokálně)
+- Vlastní předvolby a ukládání nastavení (iCloud, případně lokálně)
 
 ## Instalace
 
 1. Nainstaluj **Scriptable** z App Storu.
-2. Otevři [Pipak.js](https://raw.githubusercontent.com/Mr-Tao/pipak/main/Pipak.js) a zkopíruj jeho obsah do nového skriptu v Scriptable.
-3. Skript pojmenuj **Pipak** a spusť. Volitelně jej přidej na plochu přes akci Zkratek **Run Script** (s volbou **Run in App**).
+2. Zkopíruj obsah [Pipak.js](https://raw.githubusercontent.com/Mr-Tao/pipak/main/Pipak.js) do nového skriptu v Scriptable.
+3. Pojmenuj jej **Pípák** (s diakritikou) a spusť.
 
-Skripty se při zapnutém iCloud Drivu mohou synchronizovat mezi iPhonem a iPadem.
+Volitelně vytvoř ve Zkratkách akci **Run Script** s nastavením **Run in App** a přidej ji na plochu. Pokud přejmenováváš dřívější skript `Pipak`, zkontroluj ve Zkratkách, že se stále spouští správný skript.
 
-## Aktualizace
+## Automatické aktualizace
 
-Pro aktualizace bez opakovaného kopírování kódu si v Scriptable vytvoř ještě skript **Update-Pipak** z [Update-Pipak.js](https://raw.githubusercontent.com/Mr-Tao/pipak/main/Update-Pipak.js).
+Při spuštění Pípák maximálně jednou za 24 hodin vyhledá novější **stabilní vydání** na [GitHub Releases](https://github.com/Mr-Tao/pipak/releases). Pokud je dostupné, stáhne jeho `Pipak.js`, ověří verzi, zazálohuje dosavadní skript jako `Pípák.js.bak` (nebo `Pipak.js.bak` u staršího názvu) a nahradí jej. Nová verze se použije až při dalším spuštění.
 
-Při jeho spuštění se stáhne aktuální `Pipak.js` z GitHubu. Pokud se obsah změnil, updater se zeptá na potvrzení, uloží zálohu `Pipak.js.bak` a nahradí původní soubor. Aktualizace je **ruční**, vyžaduje internet a nic neinstaluje bez souhlasu.
+Kontrola je tichá, nevyžaduje potvrzení a nemění nastavení tréninků. Při výpadku internetu nebo chybě aktualizace pokračuje původní verze. Pro běžné cvičení není připojení k internetu potřeba. Při neúspěšné kontrole se pokus zopakuje nejdříve po hodině.
 
-Updater očekává název skriptu **Pipak** (soubor `Pipak.js`). Pokud jej máš v Scriptable pojmenovaný jinak, nejprve ho přejmenuj. V případě více kopií v iCloudu a lokálním úložišti se updater zeptá, kterou upravit.
+Automatické aktualizace začnou fungovat až po zveřejnění prvního stabilního vydání; samotné změny na větvi `main` se na zařízení automaticky neinstalují.
 
-Osobní konfiguraci `Pipak-settings.json` updater nemění. Při synchronizaci přes iCloud se aktualizace může projevit i na dalších zařízeních přihlášených ke stejnému účtu.
+## Obnova
+
+Pokud Pípák po aktualizaci nepůjde spustit, můžeš použít zálohu nebo samostatný [Update-Pipak.js](https://raw.githubusercontent.com/Mr-Tao/pipak/main/Update-Pipak.js). Obnovovací skript umí pracovat s názvy `Pípák` i `Pipak` a na rozdíl od automatické aktualizace stahuje aktuální kód z `main`.
 
 ## Poznámky
 
-Vizuální režim je určen pro **rozsvícený displej**. Pokud WebView přejde na pozadí, časovač se při detekci události pozastaví. Spolehlivost zvuků na pozadí nelze zaručit.
+Vizuální režim je určen pro **rozsvícený displej**. Při přechodu WebView na pozadí se časovač při detekci události pozastaví. Spolehlivost zvuků na pozadí nelze zaručit.
 
-Zdrojový kód je v [Pipak.js](Pipak.js). Projekt používá čistý JavaScript bez runtime závislostí.
+Projekt používá čistý JavaScript bez runtime závislostí.

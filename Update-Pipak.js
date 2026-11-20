@@ -3,7 +3,8 @@
 // Pípák Visual — manual updater for Scriptable.
 
 const SOURCE_URL = "https://raw.githubusercontent.com/Mr-Tao/pipak/main/Pipak.js";
-const SCRIPT_NAME = "Pipak.js";
+// Support installations with or without diacritics.
+const SCRIPT_NAMES = ["Pípák.js", "Pipak.js"];
 
 async function notify(title, message) {
   const alert = new Alert();
@@ -14,39 +15,32 @@ async function notify(title, message) {
 }
 
 function storageLocations() {
-  const locations = [];
+  const stores = [];
 
   try {
     const fm = FileManager.iCloud();
-    locations.push({
-      name: "iCloud",
-      fm,
-      path: fm.joinPath(fm.documentsDirectory(), SCRIPT_NAME),
-    });
+    stores.push({ name: "iCloud", fm });
   } catch (error) {
     console.log(`iCloud není dostupný: ${String(error)}`);
   }
 
-  const fm = FileManager.local();
-  locations.push({
-    name: "Lokální úložiště",
+  stores.push({ name: "Lokální úložiště", fm: FileManager.local() });
+  return stores.flatMap(({ name, fm }) => SCRIPT_NAMES.map(file => ({
+    name: `${name} — ${file}`,
     fm,
-    path: fm.joinPath(fm.documentsDirectory(), SCRIPT_NAME),
-  });
-
-  return locations;
+    path: fm.joinPath(fm.documentsDirectory(), file),
+  })));
 }
 
 async function selectDestination() {
   const locations = storageLocations();
   const found = locations.filter(({ fm, path }) => fm.fileExists(path));
-
   if (found.length === 1) return found[0];
   if (found.length === 0) return locations[0];
 
   const alert = new Alert();
   alert.title = "Kam nainstalovat Pípák?";
-  alert.message = "Pipak.js existuje na více místech. Vyber, který soubor aktualizovat.";
+  alert.message = "Našel jsem více verzí. Vyber soubor pro obnovu.";
   for (const { name } of found) alert.addAction(name);
   alert.addCancelAction("Zrušit");
   const index = await alert.presentAlert();
@@ -100,7 +94,7 @@ async function update() {
   if ((await alert.presentAlert()) !== 0) return;
 
   if (exists) {
-    const backup = fm.joinPath(fm.documentsDirectory(), "Pipak.js.bak");
+    const backup = `${path}.bak`;
     fm.writeString(backup, previous);
   }
   fm.writeString(path, latest);
