@@ -19,13 +19,14 @@ function storageLocations() {
 
   try {
     const fm = FileManager.iCloud();
-    stores.push({ name: "iCloud", fm });
+    stores.push({ name: "iCloud", fm, isCloud: true });
   } catch (error) {
     console.log(`iCloud není dostupný: ${String(error)}`);
   }
 
-  stores.push({ name: "Lokální úložiště", fm: FileManager.local() });
-  return stores.flatMap(({ name, fm }) => SCRIPT_NAMES.map(file => ({
+  stores.push({ name: "Lokální úložiště", fm: FileManager.local(), isCloud: false });
+  return stores.flatMap(({ name, fm, isCloud }) => SCRIPT_NAMES.map(file => ({
+    isCloud,
     name: `${name} — ${file}`,
     fm,
     path: fm.joinPath(fm.documentsDirectory(), file),
@@ -36,7 +37,14 @@ async function selectDestination() {
   const locations = storageLocations();
   const found = locations.filter(({ fm, path }) => fm.fileExists(path));
   if (found.length === 1) return found[0];
-  if (found.length === 0) return locations[0];
+  if (found.length === 0) {
+    await notify(
+      "Pípák nenalezen",
+      "Nenašel jsem existující Pípák ani Pipak ve Scriptable. " +
+        "Aby nevznikla duplicitní instalace, žádný skript nevytvořím.",
+    );
+    return null;
+  }
 
   const alert = new Alert();
   alert.title = "Kam nainstalovat Pípák?";
@@ -70,11 +78,11 @@ async function update() {
     throw new Error("Stažený obsah nevypadá jako platný Pípák.");
   }
 
-  const { fm, path } = target;
+  const { fm, path, isCloud } = target;
   const exists = fm.fileExists(path);
   let previous = null;
   if (exists) {
-    await fm.downloadFileFromiCloud(path);
+    if (isCloud) await fm.downloadFileFromiCloud(path);
     previous = fm.readString(path);
     if (latest === previous) {
       await notify("Pípák je aktuální", `Verze ${versionOf(latest)} už je nainstalovaná.`);
