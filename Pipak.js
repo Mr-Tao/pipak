@@ -20,7 +20,7 @@ const PRESETS = {
 function normalize(raw, base, limits) {
   const result = { ...base };
   for (const k of Object.keys(limits)) {
-    const x = raw && raw[k];
+    const x = raw?.[k];
     if (x == null || x === "") continue;
     const n = Number(x);
     if (Number.isSafeInteger(n) && n >= limits[k][0] && n <= limits[k][1]) {
@@ -36,7 +36,7 @@ function normalize(raw, base, limits) {
 
 function normalizeStore(raw, defaults, limits) {
   const presets = Object.create(null);
-  const entries = raw && raw.presets && typeof raw.presets === "object"
+  const entries = raw?.presets && typeof raw.presets === "object"
     ? Object.entries(raw.presets) : [];
   for (const [key, value] of entries.slice(0, 30)) {
     const name = key.trim().slice(0, 60);
@@ -45,8 +45,8 @@ function normalizeStore(raw, defaults, limits) {
   }
   return {
     schema: 1,
-    updatedAt: Number(raw && raw.updatedAt) || 0,
-    last: normalize(raw && raw.last, defaults, limits),
+    updatedAt: Number(raw?.updatedAt) || 0,
+    last: normalize(raw?.last, defaults, limits),
     presets
   };
 }
@@ -92,7 +92,7 @@ async function readStore(fm, path, isCloud) {
     if (!fm.fileExists(path)) return null;
     if (isCloud) await fm.downloadFileFromiCloud(path);
     const raw = JSON.parse(fm.readString(path));
-    if (!raw || raw.schema !== 1) return null;
+    if (raw?.schema !== 1) return null;
     return normalizeStore(raw, DEFAULTS, LIMITS);
   } catch (e) { console.log(`Pípák read: ${String(e)}`); return null; }
 }
