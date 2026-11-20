@@ -28,6 +28,9 @@ Automatické aktualizace začnou fungovat až po zveřejnění prvního stabiln�
 
 ## Obnova
 
+**Přechod ze starší instalace:** Pokud jsi dříve používal samostatný `Update-Pipak`, aktualizuj nejprve i jeho zdrojový kód. Starší aktualizátor vyhledává pouze `Pipak.js` a po přejmenování na `Pípák` by mohl vytvořit druhou kopii. Nová verze aktualizátoru hledá oba názvy a při nenalezení existujícího skriptu raději nic neinstaluje.
+
+
 Pokud Pípák po aktualizaci nepůjde spustit, můžeš použít zálohu nebo samostatný [Update-Pipak.js](https://raw.githubusercontent.com/Mr-Tao/pipak/main/Update-Pipak.js). Obnovovací skript umí pracovat s názvy `Pípák` i `Pipak` a na rozdíl od automatické aktualizace stahuje aktuální kód z `main`.
 
 ## Poznámky
