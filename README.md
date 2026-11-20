@@ -1,36 +1,35 @@
 # Pípák Visual
 
-Intervalový časovač pro iPhone a iPad. Běží jako samostatný JavaScript ve [Scriptable](https://apps.apple.com/cz/app/scriptable/id1405459188); bez kompilace, sideloadingu, serveru či externích zvukových souborů.
+Intervalový časovač pro iPhone a iPad napsaný v JavaScriptu pro [Scriptable](https://apps.apple.com/cz/app/scriptable/id1405459188). Bez předplatného, sideloadingu a externích zvukových souborů.
+
+## Co umí
+
+- Tabata 8 × 20/10 s, minutové série 5 × 60 s a vlastní intervaly
+- Více sérií, pauzy, úvodní příprava a výstražná pípnutí
+- Barevné fáze, velký odpočet, přehled kol a průběhu tréninku
+- Nastavitelná hlasitost signálů, pozastavení a pokračování
+- Pojmenované předvolby a ukládání nastavení (iCloud, případně lokálně)
 
 ## Instalace
 
-1. Nainstaluj Scriptable z App Storu.
-2. Vytvoř nový skript a zkopíruj do něj obsah `Pipak.js`.
-3. Spusť skript v aplikaci. Volitelně vytvoř zkratku Scriptable → Run Script s volbou Run in App a přidej ji na plochu.
+1. Nainstaluj **Scriptable** z App Storu.
+2. Otevři [Pipak.js](https://raw.githubusercontent.com/Mr-Tao/pipak/main/Pipak.js) a zkopíruj jeho obsah do nového skriptu v Scriptable.
+3. Skript pojmenuj **Pipak** a spusť. Volitelně jej přidej na plochu přes akci Zkratek **Run Script** (s volbou **Run in App**).
 
-## Funkce verze 0.2
+Skripty se při zapnutém iCloud Drivu mohou synchronizovat mezi iPhonem a iPadem.
 
-- Tabata 8 × 20/10 s, minutové série 5 × 60 s, vlastní tréninky.
-- Více sérií, příprava, odpočinky, výstražná pípnutí.
-- Barevné fáze, odpočet, následující fáze, celkový průběh, pauza a reset.
-- Syntetické tóny s vlastní regulací amplitudy.
-- Pojmenované předvolby a poslední konfigurace v iCloudu s lokální zálohou.
+## Aktualizace
 
-Pauza mezi sériemi nahrazuje poslední krátký odpočinek dané série. Po poslední sérii se běžný odpočinek zachovává.
+Pro aktualizace bez opakovaného kopírování kódu si v Scriptable vytvoř ještě skript **Update-Pipak** z [Update-Pipak.js](https://raw.githubusercontent.com/Mr-Tao/pipak/main/Update-Pipak.js).
 
-## Kompatibilita
+Při jeho spuštění se stáhne aktuální `Pipak.js` z GitHubu. Pokud se obsah změnil, updater se zeptá na potvrzení, uloží zálohu `Pipak.js.bak` a nahradí původní soubor. Aktualizace je **ruční**, vyžaduje internet a nic neinstaluje bez souhlasu.
 
-Verze 0.1 byla ověřena na iOS 18 a iPadOS 15.8.8; na iPadu fungovala i při přehrávání Apple Music a displej zůstal během tabaty aktivní. Verzi 0.2 je třeba ověřit zejména při ukládání a synchronizaci. Při přechodu na pozadí se vizuální časovač při detekci této události pozastaví. Souběžné změny konfigurace na více zařízeních se neslučují; rozhoduje poslední uložená verze.
+Updater očekává název skriptu **Pipak** (soubor `Pipak.js`). Pokud jej máš v Scriptable pojmenovaný jinak, nejprve ho přejmenuj. V případě více kopií v iCloudu a lokálním úložišti se updater zeptá, kterou upravit.
 
-## Vývoj
+Osobní konfiguraci `Pipak-settings.json` updater nemění. Při synchronizaci přes iCloud se aktualizace může projevit i na dalších zařízeních přihlášených ke stejnému účtu.
 
-`Pipak.js` je jediný distribuovaný soubor. HTML a funkce pro WebView jsou vloženy přímo do skriptu. Nativní vrstva Scriptable zajišťuje uložení konfigurace.
+## Poznámky
 
-```sh
-biome lint .
-biome check --write .
-node --test tests/*.test.mjs
-node --input-type=module --check < Pipak.js
-```
+Vizuální režim je určen pro **rozsvícený displej**. Pokud WebView přejde na pozadí, časovač se při detekci události pozastaví. Spolehlivost zvuků na pozadí nelze zaručit.
 
-Biome není součástí runtime; pro lokální vývoj lze využít existující instalaci. Testy používají standardní knihovnu Node.js a nepotřebují další balíčky. Neprověřují skutečný WebView ani iCloud.
+Zdrojový kód je v [Pipak.js](Pipak.js). Projekt používá čistý JavaScript bez runtime závislostí.

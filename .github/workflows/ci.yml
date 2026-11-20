@@ -18,7 +18,7 @@ jobs:
       - uses: biomejs/setup-biome@v2
         with:
           version: "2.6.8"
-      - run: biome lint --error-on-warnings Pipak.js tests/
+      - run: biome lint --error-on-warnings Pipak.js Update-Pipak.js tests/
 
   test:
     name: Node.js tests
@@ -30,6 +30,8 @@ jobs:
         with:
           node-version: "22"
       - name: Check Scriptable script syntax
-        run: node --input-type=module --check < Pipak.js
+        run: |
+          node --input-type=module --check < Pipak.js
+          node --input-type=module --check < Update-Pipak.js
       - name: Run timeline tests
         run: node --test tests/*.test.mjs
