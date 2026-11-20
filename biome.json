@@ -7,10 +7,19 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "preset": "recommended"
     }
   },
   "javascript": {
-    "globals": ["args", "FileManager", "WebView", "Script", "window", "document", "navigator", "performance"]
+    "globals": [
+      "args",
+      "FileManager",
+      "WebView",
+      "Script",
+      "window",
+      "document",
+      "navigator",
+      "performance"
+    ]
   }
 }
